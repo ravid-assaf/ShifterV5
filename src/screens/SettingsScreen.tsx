@@ -72,7 +72,10 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave, lastS
   const [shiftRequirements, setShiftRequirements] = useState(settings.shiftRequirements);
   const [persons, setPersons] = useState<Person[]>(settings.persons);
   const [newPersonName, setNewPersonName] = useState('');
+  const [newPersonIsManager, setNewPersonIsManager] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleAddPerson = () => {
     if (newPersonName.trim()) {
@@ -80,12 +83,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave, lastS
       const person: Person = {
         id: uuidv4(),
         name: newPersonName.trim(),
-        isManager: false,
+        isManager: newPersonIsManager,
         maxShiftsPerWeek: 6,
         color: generateUniqueColor(existingColors),
       };
       setPersons([...persons, person]);
       setNewPersonName('');
+      setNewPersonIsManager(false);
     }
   };
 
@@ -118,6 +122,21 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave, lastS
         [type]: value,
       },
     });
+  };
+
+  const handleEditPerson = (person: Person) => {
+    setEditingPerson(person);
+    setEditDialogOpen(true);
+  };
+
+  const handleSavePerson = () => {
+    if (editingPerson) {
+      setPersons(persons.map(p => 
+        p.id === editingPerson.id ? editingPerson : p
+      ));
+      setEditDialogOpen(false);
+      setEditingPerson(null);
+    }
   };
 
   return (
@@ -216,6 +235,19 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave, lastS
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
+              <FormControl fullWidth>
+                <InputLabel>Role</InputLabel>
+                <Select
+                  value={newPersonIsManager ? 'manager' : 'worker'}
+                  onChange={(e) => setNewPersonIsManager(e.target.value === 'manager')}
+                  label="Role"
+                >
+                  <MenuItem value="worker">Worker</MenuItem>
+                  <MenuItem value="manager">Manager</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Button
                 variant="contained"
                 onClick={handleAddPerson}
@@ -251,6 +283,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave, lastS
                 </Typography>
               </Box>
               <Box>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleEditPerson(person)}
+                  sx={{ mr: 1 }}
+                >
+                  Edit
+                </Button>
                 <IconButton onClick={() => handleDeletePerson(person.id)}>
                   <DeleteIcon />
                 </IconButton>
@@ -258,6 +297,46 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave, lastS
             </Paper>
           ))}
         </Paper>
+
+        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+          <DialogTitle>Edit Person</DialogTitle>
+          <DialogContent>
+            {editingPerson && (
+              <Box sx={{ pt: 2 }}>
+                <TextField
+                  label="Name"
+                  value={editingPerson.name}
+                  onChange={(e) => setEditingPerson({ ...editingPerson, name: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Max Shifts Per Week"
+                  type="number"
+                  value={editingPerson.maxShiftsPerWeek}
+                  onChange={(e) => setEditingPerson({ ...editingPerson, maxShiftsPerWeek: parseInt(e.target.value, 10) })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <FormControl fullWidth>
+                  <InputLabel>Role</InputLabel>
+                  <Select
+                    value={editingPerson.isManager ? 'manager' : 'worker'}
+                    onChange={(e) => setEditingPerson({ ...editingPerson, isManager: e.target.value === 'manager' })}
+                    label="Role"
+                  >
+                    <MenuItem value="worker">Worker</MenuItem>
+                    <MenuItem value="manager">Manager</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSavePerson} variant="contained">Save</Button>
+          </DialogActions>
+        </Dialog>
 
         <Dialog
           open={resetDialogOpen}

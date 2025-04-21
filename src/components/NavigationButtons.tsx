@@ -9,12 +9,13 @@ import {
   DialogActions,
   TextField,
 } from '@mui/material';
+import { ScheduleSettings, DayType } from '../types';
 
 interface NavigationButtonsProps {
   currentScreen: string;
-  settings: any;
-  onSave: (settings: any) => void;
-  onNavigate: (screen: string) => void | Promise<void>;
+  settings: ScheduleSettings;
+  onSave: (settings: ScheduleSettings) => void;
+  onNavigate: (screen: string) => void;
   lastSavePath: string | null;
   onSetLastSavePath: (path: string) => void;
 }
@@ -36,6 +37,12 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const currentIndex = screens.indexOf(currentScreen);
   const canGoBack = currentIndex > 0;
   const canGoNext = currentIndex < screens.length - 1;
+
+  const handleNavigation = (screen: string) => {
+    // Save current settings before navigation
+    onSave(settings);
+    onNavigate(screen);
+  };
 
   const handleSave = () => {
     if (lastSavePath) {
@@ -85,7 +92,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   };
 
   const handleResetConfirm = () => {
-    const defaultSettings = {
+    const defaultSettings: ScheduleSettings = {
       shiftRequirements: {
         sunday: { morning: 0, afternoon: 0, night: 0 },
         monday: { morning: 0, afternoon: 0, night: 0 },
@@ -96,7 +103,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         saturday: { morning: 0, afternoon: 0, night: 0 },
       },
       persons: [],
-      firstDayOfWeek: 'sunday',
+      firstDayOfWeek: 'sunday' as DayType,
       incompatiblePairs: [],
       availability: {},
     };
@@ -158,12 +165,12 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 
         <Box sx={{ display: 'flex', gap: 1 }}>
           {canGoBack && (
-            <Button variant="contained" onClick={() => onNavigate(screens[currentIndex - 1])}>
+            <Button variant="contained" onClick={() => handleNavigation(screens[currentIndex - 1])}>
               Back
             </Button>
           )}
           {canGoNext && (
-            <Button variant="contained" onClick={() => onNavigate(screens[currentIndex + 1])}>
+            <Button variant="contained" onClick={() => handleNavigation(screens[currentIndex + 1])}>
               Continue
             </Button>
           )}
@@ -176,18 +183,18 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         gap: 1,
         flexWrap: 'wrap'
       }}>
-        <Button 
+        <Button
           variant="contained" 
           color="success" 
-          onClick={() => onNavigate('settings')}
+          onClick={() => handleNavigation('settings')}
           disabled={currentScreen === 'settings'}
         >
           Settings
         </Button>
-        <Button 
+        <Button
           variant="contained" 
           color="success" 
-          onClick={() => onNavigate('incompatible-pairs')}
+          onClick={() => handleNavigation('incompatible-pairs')}
           disabled={currentScreen === 'incompatible-pairs'}
         >
           Incompatible Pairs
@@ -195,7 +202,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         <Button 
           variant="contained" 
           color="success" 
-          onClick={() => onNavigate('availability')}
+          onClick={() => handleNavigation('availability')}
           disabled={currentScreen === 'availability'}
         >
           Availability
@@ -203,7 +210,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         <Button 
           variant="contained" 
           color="success" 
-          onClick={() => onNavigate('schedule')}
+          onClick={() => handleNavigation('schedule')}
           disabled={currentScreen === 'schedule'}
         >
           Schedule
