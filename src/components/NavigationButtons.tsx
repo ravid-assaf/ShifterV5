@@ -9,22 +9,19 @@ import {
   DialogActions,
   TextField,
 } from '@mui/material';
-import { Save as SaveIcon, Refresh as RefreshIcon, SaveAs as SaveAsIcon, Upload as UploadIcon } from '@mui/icons-material';
-import { ScheduleSettings } from '../types';
-import { useNavigate } from 'react-router-dom';
 
 interface NavigationButtonsProps {
   currentScreen: string;
-  settings: ScheduleSettings;
-  onSave: (settings: ScheduleSettings) => void;
-  onNavigate: (screen: string) => void;
+  settings: any;
+  onSave: (settings: any) => void;
+  onNavigate: (screen: string) => void | Promise<void>;
   lastSavePath: string | null;
   onSetLastSavePath: (path: string) => void;
 }
 
 const screens = ['settings', 'incompatible-pairs', 'availability', 'schedule'];
 
-const NavigationButtons = ({
+const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   currentScreen,
   settings,
   onSave,
@@ -32,11 +29,9 @@ const NavigationButtons = ({
   lastSavePath,
   onSetLastSavePath,
 }: NavigationButtonsProps) => {
-  const navigate = useNavigate();
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [fileName, setFileName] = useState('');
-  const [saveAsPath, setSaveAsPath] = useState('');
 
   const currentIndex = screens.indexOf(currentScreen);
   const canGoBack = currentIndex > 0;
@@ -90,13 +85,23 @@ const NavigationButtons = ({
   };
 
   const handleResetConfirm = () => {
-    onSave({
+    const defaultSettings = {
+      shiftRequirements: {
+        sunday: { morning: 0, afternoon: 0, night: 0 },
+        monday: { morning: 0, afternoon: 0, night: 0 },
+        tuesday: { morning: 0, afternoon: 0, night: 0 },
+        wednesday: { morning: 0, afternoon: 0, night: 0 },
+        thursday: { morning: 0, afternoon: 0, night: 0 },
+        friday: { morning: 0, afternoon: 0, night: 0 },
+        saturday: { morning: 0, afternoon: 0, night: 0 },
+      },
       persons: [],
-      shiftRequirements: {},
+      firstDayOfWeek: 'sunday',
+      incompatiblePairs: [],
       availability: {},
-      incompatiblePairs: []
-    });
-    onSetLastSavePath(null);
+    };
+    onSave(defaultSettings);
+    onSetLastSavePath('');
     setResetDialogOpen(false);
   };
 

@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { useState } from 'react';
-import { ScheduleSettings, DayType, ShiftType } from './types';
+import { ScheduleSettings } from './types';
 import SettingsScreen from './screens/SettingsScreen';
 import IncompatiblePairsScreen from './screens/IncompatiblePairsScreen';
 import AvailabilityScreen from './screens/AvailabilityScreen';

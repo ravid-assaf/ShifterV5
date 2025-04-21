@@ -1,84 +1,79 @@
-# Shift Scheduling App
+# Shifter - Work Schedule Management
 
-A React-based shift scheduling application that helps manage and optimize shift assignments for a team with multiple shifts per day.
+A modern web application for managing work schedules, built with React, TypeScript, and Material-UI.
 
 ## Features
 
-- Configure shift requirements for each day and shift type
-- Add and manage team members with different roles (workers and managers)
-- Define incompatible pairs of team members who cannot work the same shift
-- Set availability preferences for each team member
-- Generate optimized shift schedules with validation
-- Export schedules to CSV format
-- Save and load settings
+- Create and manage employee schedules
+- Set shift requirements for each day
+- Handle incompatible pairs of workers
+- Manage worker availability
+- Export schedules to CSV
+- Save and load schedule configurations
 
-## Installation
+## Tech Stack
 
-1. Make sure you have Node.js installed on your system
-2. Clone this repository
-3. Navigate to the project directory
-4. Install dependencies:
-   ```bash
-   npm install
-   ```
-5. Start the development server:
-   ```bash
-   npm run dev
-   ```
+- React 19
+- TypeScript
+- Material-UI v7
+- Vite 6
+- React Router v7
 
-## Usage
+## Development
 
-The application consists of four main screens:
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd shifter
+```
 
-1. **Settings Screen**
-   - Set the first day of the week
-   - Configure the number of people required for each shift
-   - Add and manage team members
+2. Install dependencies:
+```bash
+npm install
+```
 
-2. **Incompatible Pairs Screen**
-   - Define pairs of team members who cannot work the same shift
+3. Start the development server:
+```bash
+npm run dev
+```
 
-3. **Availability Screen**
-   - Set availability preferences for each team member
-   - Mark shifts as:
-     - Available (green)
-     - Unavailable (red)
-     - Preferred (yellow)
-     - Required (blue)
+4. Build for production:
+```bash
+npm run build
+```
 
-4. **Schedule Screen**
-   - View and generate shift schedules
-   - Validate schedule constraints
-   - Export schedule to CSV
-   - Manually adjust assignments if needed
+5. Preview production build:
+```bash
+npm run preview
+```
 
-## Data Persistence
+## Deployment
 
-All settings are automatically saved to the browser's local storage. This means:
-- Your data will persist between sessions
-- You can close and reopen the application without losing your settings
-- Settings are specific to the browser you're using
+### GitHub Pages
 
-## Exporting Data
+This project is configured for automatic deployment to GitHub Pages using GitHub Actions.
 
-To export the current schedule:
-1. Navigate to the Schedule screen
-2. Click the save icon in the top-right corner
-3. A CSV file will be downloaded with the current schedule
+To deploy:
 
-## Requirements
+1. Push your changes to the main branch
+2. GitHub Actions will automatically build and deploy your changes
+3. Visit your GitHub Pages URL to see the deployed application
 
-- Node.js 14 or higher
-- Modern web browser with JavaScript enabled
+### Manual Deployment
 
-## Browser Compatibility
+To deploy to any static hosting service:
 
-The application is compatible with:
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
+1. Build the project:
+```bash
+npm run build
+```
+
+2. Deploy the contents of the `dist` directory to your hosting service
+
+## Environment Variables
+
+- `VITE_BASE_URL`: Base URL for the application (default: '/')
 
 ## License
 
-This project is licensed under the MIT License.
+MIT

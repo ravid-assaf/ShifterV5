@@ -1,18 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
   Container,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
   Typography,
-  Checkbox,
-  FormControlLabel,
-  Paper,
+  TextField,
   Grid,
   IconButton,
   Dialog,
@@ -20,14 +13,14 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  SelectChangeEvent,
+  Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import { Delete as DeleteIcon, Edit as EditIcon, Refresh as RefreshIcon } from '@mui/icons-material';
-import { ScheduleSettings, DayType, Person, ShiftType } from '../types';
+import { Delete as DeleteIcon } from '@mui/icons-material';
+import { ScheduleSettings, DayType, Person } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import NavigationButtons from '../components/NavigationButtons';
 
@@ -73,61 +66,26 @@ const generateUniqueColor = (existingColors: string[]): string => {
   return color;
 };
 
-const SettingsScreen = ({ settings, onSave, lastSavePath, onSetLastSavePath }: SettingsScreenProps) => {
+const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave, lastSavePath, onSetLastSavePath }) => {
   const navigate = useNavigate();
   const [firstDayOfWeek, setFirstDayOfWeek] = useState<DayType>(settings.firstDayOfWeek);
   const [shiftRequirements, setShiftRequirements] = useState(settings.shiftRequirements);
   const [persons, setPersons] = useState<Person[]>(settings.persons);
-  const [newPerson, setNewPerson] = useState({
-    name: '',
-    isManager: false,
-    maxShiftsPerWeek: 6,
-  });
-  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  const [newPersonName, setNewPersonName] = useState('');
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
-  const handleSave = () => {
-    onSave({
-      ...settings,
-      firstDayOfWeek,
-      shiftRequirements,
-      persons,
-    });
-  };
-
   const handleAddPerson = () => {
-    if (newPerson.name.trim()) {
+    if (newPersonName.trim()) {
       const existingColors = persons.map(p => p.color);
       const person: Person = {
         id: uuidv4(),
-        name: newPerson.name,
-        isManager: newPerson.isManager,
-        maxShiftsPerWeek: newPerson.maxShiftsPerWeek,
+        name: newPersonName.trim(),
+        isManager: false,
+        maxShiftsPerWeek: 6,
         color: generateUniqueColor(existingColors),
       };
       setPersons([...persons, person]);
-      setNewPerson({ name: '', isManager: false, maxShiftsPerWeek: 6 });
-    }
-  };
-
-  const handleEditPerson = (person: Person) => {
-    setEditingPerson(person);
-    setNewPerson({
-      name: person.name,
-      isManager: person.isManager,
-      maxShiftsPerWeek: person.maxShiftsPerWeek,
-    });
-  };
-
-  const handleUpdatePerson = () => {
-    if (editingPerson && newPerson.name.trim()) {
-      setPersons(persons.map(p =>
-        p.id === editingPerson.id
-          ? { ...p, ...newPerson }
-          : p
-      ));
-      setEditingPerson(null);
-      setNewPerson({ name: '', isManager: false, maxShiftsPerWeek: 6 });
+      setNewPersonName('');
     }
   };
 
@@ -147,10 +105,19 @@ const SettingsScreen = ({ settings, onSave, lastSavePath, onSetLastSavePath }: S
       saturday: { morning: 3, afternoon: 3, night: 1 },
     });
     setPersons([]);
-    setNewPerson({ name: '', isManager: false, maxShiftsPerWeek: 6 });
-    setEditingPerson(null);
+    setNewPersonName('');
     localStorage.removeItem('scheduleSettings');
     setResetDialogOpen(false);
+  };
+
+  const handleShiftRequirementChange = (day: string, type: string, value: number) => {
+    setShiftRequirements({
+      ...shiftRequirements,
+      [day]: {
+        ...shiftRequirements[day as DayType],
+        [type]: value,
+      },
+    });
   };
 
   return (
@@ -197,44 +164,35 @@ const SettingsScreen = ({ settings, onSave, lastSavePath, onSetLastSavePath }: S
           </Typography>
           <Grid container spacing={2}>
             {Object.entries(shiftRequirements).map(([day, requirements]) => (
-              <Grid item xs={12} key={day}>
+              <Grid container size={12} key={day}>
                 <Typography variant="subtitle1" sx={{ textTransform: 'capitalize' }}>
                   {day}
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={4}>
+                  <Grid size={4}>
                     <TextField
                       label="Morning"
                       type="number"
                       value={requirements.morning}
-                      onChange={(e) => setShiftRequirements({
-                        ...shiftRequirements,
-                        [day]: { ...requirements, morning: parseInt(e.target.value) }
-                      })}
+                      onChange={(e) => handleShiftRequirementChange(day, 'morning', parseInt(e.target.value, 10))}
                       fullWidth
                     />
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid size={4}>
                     <TextField
                       label="Afternoon"
                       type="number"
                       value={requirements.afternoon}
-                      onChange={(e) => setShiftRequirements({
-                        ...shiftRequirements,
-                        [day]: { ...requirements, afternoon: parseInt(e.target.value) }
-                      })}
+                      onChange={(e) => handleShiftRequirementChange(day, 'afternoon', parseInt(e.target.value, 10))}
                       fullWidth
                     />
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid size={4}>
                     <TextField
                       label="Night"
                       type="number"
                       value={requirements.night}
-                      onChange={(e) => setShiftRequirements({
-                        ...shiftRequirements,
-                        [day]: { ...requirements, night: parseInt(e.target.value) }
-                      })}
+                      onChange={(e) => handleShiftRequirementChange(day, 'night', parseInt(e.target.value, 10))}
                       fullWidth
                     />
                   </Grid>
@@ -249,41 +207,21 @@ const SettingsScreen = ({ settings, onSave, lastSavePath, onSetLastSavePath }: S
             Add Person
           </Typography>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 label="Name"
-                value={newPerson.name}
-                onChange={(e) => setNewPerson({ ...newPerson, name: e.target.value })}
+                value={newPersonName}
+                onChange={(e) => setNewPersonName(e.target.value)}
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={newPerson.isManager}
-                    onChange={(e) => setNewPerson({ ...newPerson, isManager: e.target.checked })}
-                  />
-                }
-                label="Manager"
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="Max Shifts per Week"
-                type="number"
-                value={newPerson.maxShiftsPerWeek}
-                onChange={(e) => setNewPerson({ ...newPerson, maxShiftsPerWeek: parseInt(e.target.value) })}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Button
                 variant="contained"
-                onClick={editingPerson ? handleUpdatePerson : handleAddPerson}
+                onClick={handleAddPerson}
                 fullWidth
               >
-                {editingPerson ? 'Update Person' : 'Add Person'}
+                Add Person
               </Button>
             </Grid>
           </Grid>
@@ -313,9 +251,6 @@ const SettingsScreen = ({ settings, onSave, lastSavePath, onSetLastSavePath }: S
                 </Typography>
               </Box>
               <Box>
-                <IconButton onClick={() => handleEditPerson(person)}>
-                  <EditIcon />
-                </IconButton>
                 <IconButton onClick={() => handleDeletePerson(person.id)}>
                   <DeleteIcon />
                 </IconButton>

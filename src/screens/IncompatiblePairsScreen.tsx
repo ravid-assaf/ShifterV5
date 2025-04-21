@@ -17,10 +17,6 @@ import {
   FormControl,
   InputLabel,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
 } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { ScheduleSettings } from '../types';
