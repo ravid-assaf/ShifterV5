@@ -10,6 +10,9 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  VITE_BASE_URL: '/ShifterV5/'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,6 +29,7 @@ jobs:
         run: |
           npm install
           npm install -g typescript@5.7.2
+          npm install --save-dev @types/node @types/papaparse
           echo "Node version: $(node -v)"
           echo "NPM version: $(npm -v)"
           echo "TypeScript version: $(tsc -v)"
@@ -33,8 +37,6 @@ jobs:
       - name: Build
         run: |
           npm run build || (echo "Build failed. Contents of dist directory:" && ls -la dist/ && exit 1)
-        env:
-          VITE_BASE_URL: '/ShifterV5/'
           
       - name: Verify build output
         run: |
