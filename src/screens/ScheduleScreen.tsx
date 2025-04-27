@@ -16,7 +16,6 @@ import {
   MenuItem,
   FormControl,
   Alert,
-  ButtonGroup,
 } from '@mui/material';
 import { Save as SaveIcon, Refresh as RefreshIcon, Palette as PaletteIcon } from '@mui/icons-material';
 import { ScheduleSettings, DayType, ShiftType, ShiftAssignment } from '../types';
@@ -510,10 +509,12 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ settings, onSave, lastS
 
   // Update schedule only when shift assignments change
   useEffect(() => {
-    if (settings.shiftAssignments) {
-      setSchedule(settings.shiftAssignments);
-    }
-  }, [settings.shiftAssignments]);
+    setSchedule([]);
+  }, [
+    settings.persons.length,
+    ...settings.persons.map(p => p.id),
+    JSON.stringify(settings.shiftRequirements)
+  ]);
 
   return (
     <Container maxWidth="xl">
