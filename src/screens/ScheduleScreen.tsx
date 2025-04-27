@@ -83,16 +83,14 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ settings, onSave, lastS
       console.error('No shift requirements defined');
       return;
     }
+    generateSchedule();
     // Only regenerate schedule if the number of persons, their IDs, or shift requirements change
     // (not on color or other cosmetic changes)
-    const personIds = settings.persons.map(p => p.id).join(',');
-    const requirementsString = JSON.stringify(settings.shiftRequirements);
-    // eslint-disable-next-line
-    // @ts-ignore
-    useEffect(() => {
-      generateSchedule();
-    }, [personIds, requirementsString]);
-  }, []);
+  }, [
+    settings.persons.length,
+    ...settings.persons.map(p => p.id),
+    JSON.stringify(settings.shiftRequirements)
+  ]);
 
   const generateSchedule = () => {
     console.log('Starting schedule generation...');
@@ -325,7 +323,7 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ settings, onSave, lastS
       // Check if all shifts are assigned
       const allShiftsAssigned = Object.entries(settings.shiftRequirements).every(([day, requirements]) =>
         Object.entries(requirements).every(([shift, count]) => {
-          const assignments = newSchedule.filter(a => a.day === day && a.shift === shift);
+          const assignments = newSchedule.filter(a => a.day === day && a.shift === shift && a.personId);
           return assignments.length === count;
         })
       );
@@ -346,9 +344,39 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ settings, onSave, lastS
   };
 
   const validateSchedule = (currentSchedule: ShiftAssignment[]) => {
-    const allShiftsAssigned = currentSchedule.length > 0;
-    const noIncompatiblePairs = true; // TODO: Implement this check
-    const noPersonOverloaded = true; // TODO: Implement this check
+    // 1. Check if all shifts are fully assigned (only count assignments with a valid personId)
+    const allShiftsAssigned = Object.entries(settings.shiftRequirements).every(([day, requirements]) =>
+      Object.entries(requirements).every(([shift, count]) => {
+        const assignments = currentSchedule.filter(a => a.day === day && a.shift === shift && a.personId);
+        return assignments.length === count;
+      })
+    );
+
+    // 2. Check for incompatible pairs
+    const noIncompatiblePairs = currentSchedule.every(assignment => {
+      const others = currentSchedule.filter(
+        a => a.day === assignment.day && a.shift === assignment.shift && a.personId !== assignment.personId
+      );
+      return others.every(other =>
+        !settings.incompatiblePairs.some(
+          ([p1, p2]) =>
+            (p1 === assignment.personId && p2 === other.personId) ||
+            (p2 === assignment.personId && p1 === other.personId)
+        )
+      );
+    });
+
+    // 3. Check for person overload (one shift per day, not over max shifts per week)
+    const noPersonOverloaded = settings.persons.every(person => {
+      // Only one shift per day
+      const daysWorked = new Set();
+      for (const assignment of currentSchedule.filter(a => a.personId === person.id)) {
+        if (daysWorked.has(assignment.day)) return false;
+        daysWorked.add(assignment.day);
+      }
+      // Not more than max shifts per week
+      return currentSchedule.filter(a => a.personId === person.id).length <= person.maxShiftsPerWeek;
+    });
 
     setValidationResults({
       allShiftsAssigned,
