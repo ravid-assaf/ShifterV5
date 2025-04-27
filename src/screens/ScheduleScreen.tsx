@@ -16,8 +16,9 @@ import {
   MenuItem,
   FormControl,
   Alert,
+  ButtonGroup,
 } from '@mui/material';
-import { Save as SaveIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import { Save as SaveIcon, Refresh as RefreshIcon, Palette as PaletteIcon } from '@mui/icons-material';
 import { ScheduleSettings, DayType, ShiftType, ShiftAssignment } from '../types';
 import Papa from 'papaparse';
 import NavigationButtons from '../components/NavigationButtons';
@@ -78,14 +79,20 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ settings, onSave, lastS
       console.error('No persons defined in settings');
       return;
     }
-    
     if (Object.keys(settings.shiftRequirements).length === 0) {
       console.error('No shift requirements defined');
       return;
     }
-    
-    generateSchedule();
-  }, [settings]);
+    // Only regenerate schedule if the number of persons, their IDs, or shift requirements change
+    // (not on color or other cosmetic changes)
+    const personIds = settings.persons.map(p => p.id).join(',');
+    const requirementsString = JSON.stringify(settings.shiftRequirements);
+    // eslint-disable-next-line
+    // @ts-ignore
+    useEffect(() => {
+      generateSchedule();
+    }, [personIds, requirementsString]);
+  }, []);
 
   const generateSchedule = () => {
     console.log('Starting schedule generation...');
@@ -417,6 +424,69 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ settings, onSave, lastS
     link.click();
   };
 
+  const generateDistinctColors = (count: number) => {
+    const baseHues = [
+      0,    // Red
+      210,  // Blue
+      120,  // Green
+      45,   // Orange
+      280,  // Purple
+      180,  // Cyan
+      30,   // Gold
+      330,  // Pink
+      160,  // Teal
+      60,   // Yellow
+      300,  // Magenta
+      90,   // Lime
+      240,  // Indigo
+      15,   // Coral
+      200,  // Sky Blue
+    ];
+
+    // If we need more colors than our base hues, we'll create variations
+    const colors: string[] = [];
+    let iteration = 0;
+
+    while (colors.length < count) {
+      const hueIndex = colors.length % baseHues.length;
+      const hue = baseHues[hueIndex];
+      
+      // Alternate between different saturations and lightnesses for more variations
+      const saturation = iteration === 0 ? 85 : 75;
+      const lightness = iteration === 0 ? 35 : 45;
+      
+      colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+      
+      if (colors.length % baseHues.length === 0) {
+        iteration++;
+      }
+    }
+
+    // Shuffle the colors to avoid similar colors being next to each other
+    return colors.sort(() => Math.random() - 0.5);
+  };
+
+  const handleChangeColors = () => {
+    const distinctColors = generateDistinctColors(settings.persons.length);
+    const updatedPersons = settings.persons.map((person, index) => ({
+      ...person,
+      color: distinctColors[index]
+    }));
+
+    // Only update the persons array in settings, don't touch the schedule
+    onSave({
+      ...settings,
+      persons: updatedPersons
+    });
+  };
+
+  // Update schedule only when shift assignments change
+  useEffect(() => {
+    if (settings.shiftAssignments) {
+      setSchedule(settings.shiftAssignments);
+    }
+  }, [settings.shiftAssignments]);
+
   return (
     <Container maxWidth="xl">
       <Box sx={{ my: 4 }}>
@@ -424,14 +494,24 @@ const ScheduleScreen: React.FC<ScheduleScreenProps> = ({ settings, onSave, lastS
           Schedule
         </Typography>
 
-        <NavigationButtons
-          currentScreen="schedule"
-          settings={settings}
-          onSave={onSave}
-          onNavigate={(screen) => navigate(`/${screen}`)}
-          lastSavePath={lastSavePath}
-          onSetLastSavePath={onSetLastSavePath}
-        />
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <NavigationButtons
+            currentScreen="schedule"
+            settings={settings}
+            onSave={onSave}
+            onNavigate={(screen) => navigate(`/${screen}`)}
+            lastSavePath={lastSavePath}
+            onSetLastSavePath={onSetLastSavePath}
+          />
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<PaletteIcon />}
+            onClick={handleChangeColors}
+          >
+            Change Colors
+          </Button>
+        </Box>
 
         {settings.persons.length === 0 && (
           <Alert severity="error" sx={{ mb: 2 }}>
